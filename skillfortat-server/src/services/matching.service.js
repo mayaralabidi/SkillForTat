@@ -5,11 +5,30 @@ const normalize = (value) =>
     .trim()
     .toLowerCase();
 
+const splitSkills = (value) =>
+  String(value ?? "")
+    .split(/[,\n;|/]+/)
+    .map((part) => normalize(part))
+    .filter(Boolean);
+
+const hasSharedSkill = (left, right) =>
+  left.some((skill) => right.includes(skill));
+
 const getMatchType = (left, right) => {
-  const leftTeachesRightWants =
-    normalize(left.teaches) === normalize(right.wants);
-  const rightTeachesLeftWants =
-    normalize(right.teaches) === normalize(left.wants);
+  const leftTeaches = splitSkills(left.teaches);
+  const leftWants = splitSkills(left.wants);
+  const rightTeaches = splitSkills(right.teaches);
+  const rightWants = splitSkills(right.wants);
+
+  console.log(`[SKILL] Left teaches: [${leftTeaches}], wants: [${leftWants}]`);
+  console.log(`[SKILL] Right teaches: [${rightTeaches}], wants: [${rightWants}]`);
+
+  const leftTeachesRightWants = hasSharedSkill(leftTeaches, rightWants);
+  const rightTeachesLeftWants = hasSharedSkill(rightTeaches, leftWants);
+
+  console.log(
+    `[SKILL] Left teaches right wants: ${leftTeachesRightWants}, Right teaches left wants: ${rightTeachesLeftWants}`,
+  );
 
   if (leftTeachesRightWants && rightTeachesLeftWants) {
     return "exact";
@@ -26,6 +45,9 @@ const sortPair = (firstId, secondId) =>
   firstId < secondId ? [firstId, secondId] : [secondId, firstId];
 
 export const createMatchesForOffer = async (pool, offer) => {
+  console.log(`[MATCH] Processing offer ${offer.id} (user: ${offer.user_id})`);
+  console.log(`[MATCH] Teaches: "${offer.teaches}", Wants: "${offer.wants}"`);
+
   const [offers] = await pool.execute(
     `SELECT id, user_id, teaches, wants
 		 FROM offers
@@ -33,10 +55,17 @@ export const createMatchesForOffer = async (pool, offer) => {
     [offer.id, offer.user_id],
   );
 
+  console.log(`[MATCH] Found ${offers.length} candidate offers`);
+
   const createdMatches = [];
 
   for (const candidate of offers) {
+    console.log(
+      `[MATCH] Checking candidate ${candidate.id}: teaches="${candidate.teaches}", wants="${candidate.wants}"`,
+    );
+
     const matchType = getMatchType(offer, candidate);
+    console.log(`[MATCH] Match type: ${matchType || "null"}`);
 
     if (!matchType) {
       continue;
@@ -49,6 +78,7 @@ export const createMatchesForOffer = async (pool, offer) => {
     );
 
     if (existing.length > 0) {
+      console.log(`[MATCH] Match already exists, skipping`);
       continue;
     }
 
@@ -59,6 +89,7 @@ export const createMatchesForOffer = async (pool, offer) => {
       [id, offerAId, offerBId, matchType],
     );
 
+    console.log(`[MATCH] Created match ${id} with type ${matchType}`);
     createdMatches.push({ id, offerAId, offerBId, matchType });
   }
 

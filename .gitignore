@@ -46,9 +46,9 @@ Thumbs.db
 *.db
 
 # Project-specific (client/server)
-/skillfortat-client/node_modules/
-/skillfortat-client/dist/
-/skillfortat-server/node_modules/
+skillfortat-client/node_modules/
+skillfortat-client/dist/
+skillfortat-server/node_modules/
 
 # Optional: local env overrides
 .env.override

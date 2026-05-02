@@ -5,7 +5,8 @@ import { createMatchesForOffer } from "../services/matching.service.js";
 
 const buildOfferSelect = () => `
 	SELECT o.id,
-				 o.user_id AS userId,
+         o.user_id,
+         o.user_id AS userId,
 				 u.username,
 				 o.teaches,
 				 o.wants,
@@ -22,11 +23,14 @@ const parseOfferBody = (body) => {
   if (typeof body.teaches === "string") payload.teaches = body.teaches.trim();
   if (typeof body.wants === "string") payload.wants = body.wants.trim();
   if (typeof body.level === "string") payload.level = body.level.trim();
-  if (typeof body.is_active !== "undefined")
-    payload.is_active = Boolean(body.is_active);
+  if (typeof body.is_active !== "undefined") {
+    payload.is_active =
+      body.is_active === true || body.is_active === "true" || body.is_active === 1 || body.is_active === "1";
+  }
 
   return payload;
 };
+
 
 export const getOffers = async (req, res, next) => {
   try {
@@ -63,6 +67,8 @@ export const createOffer = async (req, res, next) => {
     const { teaches, wants, level } = req.body;
     const id = uuidv4();
 
+    console.log(`[OFFER] Creating offer: teaches="${teaches}", wants="${wants}", level="${level}"`);
+
     await pool.execute(
       `INSERT INTO offers (id, user_id, teaches, wants, level)
 			 VALUES (?, ?, ?, ?, ?)`,
@@ -74,7 +80,10 @@ export const createOffer = async (req, res, next) => {
     ]);
 
     const offer = rows[0];
-    await createMatchesForOffer(pool, offer);
+    console.log(`[OFFER] Inserted offer: ${JSON.stringify(offer)}`);
+
+    const matches = await createMatchesForOffer(pool, offer);
+    console.log(`[OFFER] Created ${matches.length} matches`);
 
     res.status(201).json({ offer });
   } catch (error) {
@@ -90,6 +99,8 @@ export const updateOffer = async (req, res, next) => {
     if (fields.length === 0) {
       return res.status(400).json({ message: "No changes provided" });
     }
+
+    console.log(`[OFFER] Updating offer ${req.params.id} with: ${JSON.stringify(payload)}`);
 
     const [existingRows] = await pool.execute(
       "SELECT id FROM offers WHERE id = ? AND user_id = ?",
@@ -112,7 +123,14 @@ export const updateOffer = async (req, res, next) => {
       req.params.id,
     ]);
 
-    res.json(rows[0]);
+    const offer = rows[0];
+
+    if (offer?.isActive) {
+      const matches = await createMatchesForOffer(pool, offer);
+      console.log(`[OFFER] Updated offer created ${matches.length} matches`);
+    }
+
+    res.json(offer);
   } catch (error) {
     next(error);
   }
