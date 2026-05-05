@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import api, { getApiErrorMessage } from "../api";
+import api, { getApiErrorMessage } from "../api/index.js";
 
 const useMatchStore = create((set, get) => ({
   offers: [],

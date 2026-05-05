@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import api, { getApiErrorMessage } from "../api";
+import api, { getApiErrorMessage } from "../api/index.js";
 
 const storage = createJSONStorage(() => ({
   getItem: (name) =>
