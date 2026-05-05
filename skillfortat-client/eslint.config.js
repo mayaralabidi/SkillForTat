@@ -24,8 +24,15 @@ export default [
       "react/prop-types": "off",
     },
     settings: {
-      react: {
-        version: "detect",
+      react: { version: "detect" },
+    },
+  },
+  // separate config just for test files
+  {
+    files: ["src/**/*.test.js", "src/**/*.test.jsx", "src/__tests__/**"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
       },
     },
   },
