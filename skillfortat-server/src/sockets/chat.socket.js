@@ -19,7 +19,7 @@ export const registerChatHandlers = (io, socket) => {
     socket.leave(`match:${matchId}`);
   });
 
-  socket.on("send_message", async (payload = {}, ack) => {
+  socket.on("send_message", async (ack, payload = {}) => {
     try {
       const { matchId, senderId, body } = payload;
 

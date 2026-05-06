@@ -17,20 +17,31 @@ const buildOfferSelect = () => `
 	JOIN users u ON u.id = o.user_id
 `;
 
-const parseOfferBody = (body) => {
+export const parseOfferBody = (body) => {
   const payload = {};
 
-  if (typeof body.teaches === "string") payload.teaches = body.teaches.trim();
-  if (typeof body.wants === "string") payload.wants = body.wants.trim();
-  if (typeof body.level === "string") payload.level = body.level.trim();
-  if (typeof body.is_active !== "undefined") {
+  if (body.teaches !== undefined && typeof body.teaches === "string") {
+    payload.teaches = body.teaches.trim();
+  }
+
+  if (body.wants !== undefined && typeof body.wants === "string") {
+    payload.wants = body.wants.trim();
+  }
+
+  if (body.level !== undefined && typeof body.level === "string") {
+    payload.level = body.level.trim();
+  }
+
+  if (body.is_active !== undefined) {
     payload.is_active =
-      body.is_active === true || body.is_active === "true" || body.is_active === 1 || body.is_active === "1";
+      body.is_active === true ||
+      body.is_active === "true" ||
+      body.is_active === 1 ||
+      body.is_active === "1";
   }
 
   return payload;
 };
-
 
 export const getOffers = async (req, res, next) => {
   try {
@@ -67,20 +78,22 @@ export const createOffer = async (req, res, next) => {
     const { teaches, wants, level } = req.body;
     const id = uuidv4();
 
-    console.log(`[OFFER] Creating offer: teaches="${teaches}", wants="${wants}", level="${level}"`);
+    console.log("[OFFER] Creating new offer");
 
     await pool.execute(
       `INSERT INTO offers (id, user_id, teaches, wants, level)
-			 VALUES (?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?)`,
       [id, req.user.id, teaches.trim(), wants.trim(), level],
     );
 
-    const [rows] = await pool.execute(`${buildOfferSelect()} WHERE o.id = ?`, [
-      id,
-    ]);
+    const [rows] = await pool.execute(
+      `${buildOfferSelect()} WHERE o.id = ?`,
+      [id],
+    );
 
     const offer = rows[0];
-    console.log(`[OFFER] Inserted offer: ${JSON.stringify(offer)}`);
+
+    console.log("[OFFER] Offer inserted successfully");
 
     const matches = await createMatchesForOffer(pool, offer);
     console.log(`[OFFER] Created ${matches.length} matches`);
@@ -100,7 +113,7 @@ export const updateOffer = async (req, res, next) => {
       return res.status(400).json({ message: "No changes provided" });
     }
 
-    console.log(`[OFFER] Updating offer ${req.params.id} with: ${JSON.stringify(payload)}`);
+    console.log("[OFFER] Updating offer");
 
     const [existingRows] = await pool.execute(
       "SELECT id FROM offers WHERE id = ? AND user_id = ?",
@@ -119,9 +132,10 @@ export const updateOffer = async (req, res, next) => {
       [...values, req.params.id, req.user.id],
     );
 
-    const [rows] = await pool.execute(`${buildOfferSelect()} WHERE o.id = ?`, [
-      req.params.id,
-    ]);
+    const [rows] = await pool.execute(
+      `${buildOfferSelect()} WHERE o.id = ?`,
+      [req.params.id],
+    );
 
     const offer = rows[0];
 

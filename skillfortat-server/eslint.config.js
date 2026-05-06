@@ -15,10 +15,19 @@ export default [
     },
     rules: {
       ...security.configs.recommended.rules,
-      "no-unused-vars": ["error", { 
+      "no-unused-vars": ["error", {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_"
       }],
+    },
+  },
+  // ✅ Jest globals for test files
+  {
+    files: ["src/**/*.test.js", "src/**/__tests__/**/*.js"],
+    languageOptions: {
+      globals: {
+        ...globals.jest,
+      },
     },
   },
 ];

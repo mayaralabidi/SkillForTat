@@ -1,5 +1,5 @@
 import app from "./app.js";
-import http from "http";
+import http from "node:http";
 
 const PORT = process.env.PORT || 5000;
 
