@@ -1,0 +1,6 @@
+extraScrapeConfigs: |
+  - job_name: 'backend-app'
+    static_configs:
+      - targets: ['backend-service:5000']
+    metrics_path: /metrics
+    scrape_interval: 15s
