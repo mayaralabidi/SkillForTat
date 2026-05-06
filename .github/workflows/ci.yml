@@ -88,9 +88,11 @@ jobs:
       - name: Audit dependencies
         run: cd skillfortat-server && npm audit --audit-level=high
 
+      # ✅ CHANGED: added --coverageReporters=lcov to generate coverage/lcov.info
       - name: Run tests with coverage
-        run: cd skillfortat-server && npm test -- --coverage
+        run: cd skillfortat-server && npm test -- --coverage --coverageReporters=lcov text
 
+      # ✅ CHANGED: added sonar.javascript.lcov.reportPaths so SonarCloud reads the coverage
       - name: Analyze with SonarCloud
         run: |
           cd skillfortat-server
@@ -98,6 +100,9 @@ jobs:
             -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
             -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.sources=src \
+            -Dsonar.tests=src \
+            -Dsonar.test.inclusions=src/**/*.test.js,src/**/__tests__/**/*.js \
+            -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
             -Dsonar.host.url=https://sonarcloud.io
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
